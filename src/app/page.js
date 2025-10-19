@@ -76,7 +76,8 @@ export default function Home() {
       }
     };
     sendNotification();
-    setInterval(sendNotification, 2000);
+    const oneDay = 24 * 60 * 60 * 1000;
+    setInterval(sendNotification, oneDay);
   };
 
   const categoryStyles = {
@@ -86,7 +87,6 @@ export default function Home() {
   };
   const getCategoryColor = (category) =>
     categoryStyles[category] || "bg-gray-100 text-gray-800 border-gray-200";
-
 
   return (
     <div className="min-h-screen bg-white">
