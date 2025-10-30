@@ -95,21 +95,17 @@ export default function Home() {
       }
     };
     sendNotification();
-    setInterval(sendNotification, 2000);
+    const oneDay = 24 * 60 * 60 * 1000;
+    setInterval(sendNotification, oneDay);
   };
 
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case 'Food / Eating':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'Habits / Lifestyle':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Mind / Spirit':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const categoryStyles = {
+    "Food / Eating": "bg-orange-100 text-orange-800 border-orange-200",
+    "Habits / Lifestyle": "bg-blue-100 text-blue-800 border-blue-200",
+    "Mind / Spirit": "bg-green-100 text-green-800 border-green-200",
   };
+  const getCategoryColor = (category) =>
+    categoryStyles[category] || "bg-gray-100 text-gray-800 border-gray-200";
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
