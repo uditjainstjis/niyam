@@ -38,6 +38,9 @@ const niyams = [
 export default function Home() {
   const [currentNiyam, setCurrentNiyam] = useState(null);
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const categories = ['All', 'Food / Eating', 'Habits / Lifestyle', 'Mind / Spirit'];
 
   useEffect(() => {
     setRandomNiyam();
@@ -45,11 +48,20 @@ export default function Home() {
       setIsNotificationEnabled(true);
       scheduleNotifications();
     }
-  }, []);
+  }, [selectedCategory]);
 
   const setRandomNiyam = () => {
-    const randomIndex = Math.floor(Math.random() * niyams.length);
-    setCurrentNiyam(niyams[randomIndex]);
+    const filteredNiyams = selectedCategory === 'All' 
+      ? niyams 
+      : niyams.filter(n => n.category === selectedCategory);
+    
+    if (filteredNiyams.length === 0) {
+      setCurrentNiyam(niyams[0]);
+      return;
+    }
+    
+    const randomIndex = Math.floor(Math.random() * filteredNiyams.length);
+    setCurrentNiyam(filteredNiyams[randomIndex]);
   };
 
   const requestNotificationPermission = async () => {
@@ -94,7 +106,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="text-center py-12 px-4 bg-gradient-to-b from-orange-50 to-white">
+      <header className="text-center py-12 px-4 bg-linear-to-b from-orange-50 to-white">
         <h1 className="text-4xl md:text-5xl font-bold text-orange-800 mb-3">
           Niyam
         </h1>
@@ -104,6 +116,41 @@ export default function Home() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pb-12">
+        {/* Category Filter */}
+        <div className="mb-8">
+          <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">Filter by Category</h3>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedCategory === category
+                    ? 'bg-orange-600 text-white shadow-md scale-105'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:border-orange-400 hover:bg-orange-50'
+                }`}
+              >
+                {category === 'All' ? '🌟 All' : category}
+                {category !== 'All' && (
+                  <span className="ml-1 text-xs opacity-75">
+                    ({niyams.filter(n => n.category === category).length})
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+          {selectedCategory !== 'All' && (
+            <div className="mt-3 text-center">
+              <button
+                onClick={() => setSelectedCategory('All')}
+                className="text-sm text-orange-600 hover:text-orange-700 underline"
+              >
+                Clear filter
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-orange-100">
           {currentNiyam ? (
             <div className="text-center">
@@ -119,7 +166,7 @@ export default function Home() {
                 onClick={setRandomNiyam}
                 className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
               >
-                Get Another Niyam
+                {selectedCategory === 'All' ? 'Get Another Niyam' : `Get Another from ${selectedCategory}`}
               </button>
             </div>
           ) : (
@@ -127,6 +174,28 @@ export default function Home() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
             </div>
           )}
+        </div>
+
+        {/* Category Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 text-center">
+            <div className="text-2xl font-bold text-orange-700">
+              {niyams.filter(n => n.category === 'Food / Eating').length}
+            </div>
+            <div className="text-xs text-orange-600 mt-1">Food / Eating</div>
+          </div>
+          <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 text-center">
+            <div className="text-2xl font-bold text-blue-700">
+              {niyams.filter(n => n.category === 'Habits / Lifestyle').length}
+            </div>
+            <div className="text-xs text-blue-600 mt-1">Habits / Lifestyle</div>
+          </div>
+          <div className="bg-green-50 rounded-xl p-4 border border-green-200 text-center">
+            <div className="text-2xl font-bold text-green-700">
+              {niyams.filter(n => n.category === 'Mind / Spirit').length}
+            </div>
+            <div className="text-xs text-green-600 mt-1">Mind / Spirit</div>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-orange-100">
