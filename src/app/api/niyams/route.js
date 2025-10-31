@@ -61,6 +61,126 @@ const niyams = [
     text: "The mind is everything. What you think you become",
     category: "Mindset",
     author: "Buddha"
+  },
+  {
+    id: 11,
+    text: "Listen to understand, not to reply",
+    category: "Communication",
+    author: "Stephen Covey"
+  },
+  {
+    id: 12,
+    text: "Walk slowly through life - notice the beauty around you",
+    category: "Mindfulness",
+    author: "Zen Teaching"
+  },
+  {
+    id: 13,
+    text: "Your character is your destiny",
+    category: "Ethics",
+    author: "Heraclitus"
+  },
+  {
+    id: 14,
+    text: "Read books that challenge your thinking - growth happens outside comfort zones",
+    category: "Growth",
+    author: "Intellectual Wisdom"
+  },
+  {
+    id: 15,
+    text: "Sleep well, eat mindfully, move daily - these are the pillars of health",
+    category: "Health",
+    author: "Ayurvedic Principle"
+  },
+  {
+    id: 16,
+    text: "Inner peace comes from accepting what you cannot control",
+    category: "Inner Peace",
+    author: "Stoic Philosophy"
+  },
+  {
+    id: 17,
+    text: "Fall seven times, stand up eight",
+    category: "Perseverance",
+    author: "Japanese Proverb"
+  },
+  {
+    id: 18,
+    text: "Begin where you are, use what you have, do what you can",
+    category: "Action",
+    author: "Arthur Ashe"
+  },
+  {
+    id: 19,
+    text: "Happiness is found in simple moments and grateful hearts",
+    category: "Happiness",
+    author: "Life Wisdom"
+  },
+  {
+    id: 20,
+    text: "Believe in yourself and your ability to overcome any challenge",
+    category: "Mindset",
+    author: "Self-Empowerment"
+  },
+  {
+    id: 21,
+    text: "Silence is the language of God - practice listening more than speaking",
+    category: "Mindfulness",
+    author: "Sufi Wisdom"
+  },
+  {
+    id: 22,
+    text: "Be kind to everyone you meet - you never know what battles they're fighting",
+    category: "Ethics",
+    author: "Compassion Teaching"
+  },
+  {
+    id: 23,
+    text: "Every expert was once a beginner - embrace being a student",
+    category: "Growth",
+    author: "Learning Philosophy"
+  },
+  {
+    id: 24,
+    text: "Hydrate your body, nourish your soul, rest your mind",
+    category: "Health",
+    author: "Holistic Wellness"
+  },
+  {
+    id: 25,
+    text: "Peace is not the absence of conflict, but the presence of harmony",
+    category: "Inner Peace",
+    author: "Peace Wisdom"
+  },
+  {
+    id: 26,
+    text: "Persistence is the key that unlocks the door to success",
+    category: "Perseverance",
+    author: "Success Principle"
+  },
+  {
+    id: 27,
+    text: "Take small steps daily towards your dreams - progress is progress",
+    category: "Action",
+    author: "Goal Achievement"
+  },
+  {
+    id: 28,
+    text: "Joy is not in things; it is in us",
+    category: "Happiness",
+    author: "Richard Wagner"
+  },
+  {
+    id: 29,
+    text: "Your thoughts create your reality - choose them wisely",
+    category: "Mindset",
+    author: "Manifestation Wisdom"
+  },
+  {
+    id: 30,
+    text: "Express yourself authentically - your uniqueness is your gift to the world",
+    category: "Communication",
+    author: "Authentic Living"
   }
 ];
 
