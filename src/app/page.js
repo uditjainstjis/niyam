@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const niyams = [
   { id: 1, text: "No chips today.", category: "Food / Eating" },
@@ -113,9 +114,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
-      <header className="text-center py-12 px-4 bg-linear-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900">
+      <motion.header 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="text-center py-12 px-4 bg-linear-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900"
+      >
         <div className="flex justify-end max-w-2xl mx-auto mb-4">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={toggleDarkMode}
             className="p-2 rounded-lg bg-orange-100 dark:bg-gray-700 hover:bg-orange-200 dark:hover:bg-gray-600 transition-colors"
             aria-label="Toggle dark mode"
@@ -129,7 +137,7 @@ export default function Home() {
                 <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
               </svg>
             )}
-          </button>
+          </motion.button>
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-orange-800 dark:text-orange-400 mb-3">
           Niyam
@@ -137,35 +145,66 @@ export default function Home() {
         <p className="text-lg text-orange-600 dark:text-orange-300 max-w-md mx-auto">
           Daily principles for mindful living
         </p>
-      </header>
+      </motion.header>
 
       <main className="max-w-2xl mx-auto px-4 pb-12">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
+        >
           {currentNiyam ? (
-            <div className="text-center">
-              <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium mb-6 border ${getCategoryColor(currentNiyam.category)}`}>
-                {currentNiyam.category}
-              </span>
-              
-              <h2 className="text-2xl md:text-3xl font-medium text-gray-800 dark:text-gray-100 mb-8 leading-relaxed">
-                {currentNiyam.text}
-              </h2>
-              
-              <button
-                onClick={setRandomNiyam}
-                className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentNiyam.id}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.4 }}
+                className="text-center"
               >
-                Get Another Niyam
-              </button>
-            </div>
+                <motion.span 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                  className={`inline-block px-4 py-2 rounded-full text-sm font-medium mb-6 border ${getCategoryColor(currentNiyam.category)}`}
+                >
+                  {currentNiyam.category}
+                </motion.span>
+                
+                <motion.h2 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-2xl md:text-3xl font-medium text-gray-800 dark:text-gray-100 mb-8 leading-relaxed"
+                >
+                  {currentNiyam.text}
+                </motion.h2>
+                
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={setRandomNiyam}
+                  className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                >
+                  Get Another Niyam
+                </motion.button>
+              </motion.div>
+            </AnimatePresence>
           ) : (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 dark:border-orange-400 mx-auto"></div>
             </div>
           )}
-        </div>
+        </motion.div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-orange-100 dark:border-gray-700 transition-colors duration-300">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
+        >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-gray-800 dark:text-gray-100 text-lg">Daily Reminders</h3>
@@ -174,7 +213,8 @@ export default function Home() {
               </p>
             </div>
             
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
               onClick={requestNotificationPermission}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 isNotificationEnabled 
@@ -182,12 +222,12 @@ export default function Home() {
                   : 'bg-gray-300 dark:bg-gray-600'
               }`}
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isNotificationEnabled ? 'translate-x-6' : 'translate-x-1'
-                }`}
+              <motion.span
+                animate={{ x: isNotificationEnabled ? 24 : 4 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className="inline-block h-4 w-4 rounded-full bg-white"
               />
-            </button>
+            </motion.button>
           </div>
           
           <div className="mt-4 text-center">
@@ -198,14 +238,19 @@ export default function Home() {
               }
             </p>
           </div>
-        </div>
+        </motion.div>
       </main>
 
-      <footer className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700">
+      <motion.footer 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700"
+      >
         <p className="text-orange-600 dark:text-orange-400 text-sm">
           Made with ❤️ for mindful living
         </p>
-      </footer>
+      </motion.footer>
     </div>
   );
 }
