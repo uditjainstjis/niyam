@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
@@ -45,6 +45,14 @@ const niyams = [
 export default function SharePage() {
   const [selectedNiyam, setSelectedNiyam] = useState(niyams[0]);
   const [bgColor, setBgColor] = useState('orange');
+  const [customText, setCustomText] = useState('');
+  const [isCustomMode, setIsCustomMode] = useState(false);
+  const [fontSize, setFontSize] = useState('medium');
+  const [cardStyle, setCardStyle] = useState('gradient');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [viewHistory, setViewHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
   const cardRef = useRef(null);
 
   const backgroundOptions = [
@@ -53,12 +61,118 @@ export default function SharePage() {
     { name: 'Green', value: 'green', gradient: 'from-green-400 to-green-600' },
     { name: 'Purple', value: 'purple', gradient: 'from-purple-400 to-purple-600' },
     { name: 'Pink', value: 'pink', gradient: 'from-pink-400 to-pink-600' },
-    { name: 'Indigo', value: 'indigo', gradient: 'from-indigo-400 to-indigo-600' }
+    { name: 'Indigo', value: 'indigo', gradient: 'from-indigo-400 to-indigo-600' },
+    { name: 'Sunset', value: 'sunset', gradient: 'from-orange-500 via-red-500 to-pink-500' },
+    { name: 'Ocean', value: 'ocean', gradient: 'from-blue-600 via-blue-700 to-indigo-800' },
+    { name: 'Forest', value: 'forest', gradient: 'from-green-600 via-green-700 to-emerald-800' },
+    { name: 'Aurora', value: 'aurora', gradient: 'from-purple-600 via-pink-600 to-blue-600' }
   ];
+
+  const cardStyles = [
+    { name: 'Gradient', value: 'gradient' },
+    { name: 'Solid', value: 'solid' },
+    { name: 'Pattern', value: 'pattern' }
+  ];
+
+  const fontSizes = [
+    { name: 'Small', value: 'small', class: 'text-lg md:text-xl' },
+    { name: 'Medium', value: 'medium', class: 'text-xl md:text-2xl' },
+    { name: 'Large', value: 'large', class: 'text-2xl md:text-3xl' }
+  ];
+
+  const categories = ['All', 'Food / Eating', 'Habits / Lifestyle', 'Mind / Spirit'];
+
+  // Load history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('niyamViewHistory');
+    if (savedHistory) {
+      setViewHistory(JSON.parse(savedHistory));
+    }
+    // Add initial niyam to history
+    addToHistory(niyams[0]);
+  }, []);
+
+  // Function to add niyam to history
+  const addToHistory = (niyam) => {
+    const timestamp = new Date().toISOString();
+    const historyItem = {
+      ...niyam,
+      viewedAt: timestamp,
+      id: `${niyam.id}-${timestamp}` // Unique ID for history items
+    };
+
+    setViewHistory(prev => {
+      // Remove if already exists to avoid duplicates
+      const filtered = prev.filter(item => item.id !== niyam.id);
+      // Add to beginning and limit to 50 items
+      const newHistory = [historyItem, ...filtered].slice(0, 50);
+      localStorage.setItem('niyamViewHistory', JSON.stringify(newHistory));
+      return newHistory;
+    });
+  };
+
+  // Function to clear history
+  const clearHistory = () => {
+    setViewHistory([]);
+    localStorage.removeItem('niyamViewHistory');
+    alert('History cleared!');
+  };
+
+  // Function to load niyam from history
+  const loadFromHistory = (historyItem) => {
+    setSelectedNiyam({
+      id: historyItem.id.split('-')[0], // Extract original ID
+      text: historyItem.text,
+      category: historyItem.category
+    });
+    setIsCustomMode(false);
+  };
 
   const getBgGradient = () => {
     const bg = backgroundOptions.find(bg => bg.value === bgColor);
     return bg ? bg.gradient : 'from-orange-400 to-orange-600';
+  };
+
+  const getCardBackground = () => {
+    const gradient = getBgGradient();
+    switch (cardStyle) {
+      case 'solid':
+        return bgColor === 'orange' ? 'bg-orange-500' : 
+               bgColor === 'blue' ? 'bg-blue-500' :
+               bgColor === 'green' ? 'bg-green-500' :
+               bgColor === 'purple' ? 'bg-purple-500' :
+               bgColor === 'pink' ? 'bg-pink-500' :
+               bgColor === 'indigo' ? 'bg-indigo-500' :
+               'bg-orange-500';
+      case 'pattern':
+        return `bg-linear-to-br ${gradient} bg-opacity-90 relative`;
+      default:
+        return `bg-linear-to-br ${gradient}`;
+    }
+  };
+
+  const getFontSizeClass = () => {
+    const font = fontSizes.find(f => f.value === fontSize);
+    return font ? font.class : 'text-xl md:text-2xl';
+  };
+
+  const getFilteredNiyams = () => {
+    if (selectedCategory === 'All') return niyams;
+    return niyams.filter(n => n.category === selectedCategory);
+  };
+
+  const getRandomNiyam = () => {
+    const filtered = getFilteredNiyams();
+    const randomIndex = Math.floor(Math.random() * filtered.length);
+    const randomNiyam = filtered[randomIndex];
+    setSelectedNiyam(randomNiyam);
+    addToHistory(randomNiyam);
+  };
+
+  // Function to set selected niyam and add to history
+  const setSelectedNiyamWithHistory = (niyam) => {
+    setSelectedNiyam(niyam);
+    addToHistory(niyam);
   };
 
   const getCategoryColor = (category) => {
@@ -74,38 +188,94 @@ export default function SharePage() {
     }
   };
 
-  const downloadAsImage = async () => {
+  const downloadAsImage = async (format = 'png') => {
     if (!cardRef.current) return;
 
+    setIsGenerating(true);
     try {
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: null,
-        scale: 2,
-        width: 600,
-        height: 400
+        scale: 3,
+        width: 800,
+        height: 533,
+        useCORS: true,
+        allowTaint: true
       });
       
       const link = document.createElement('a');
-      link.download = `niyam-${selectedNiyam.id}.png`;
-      link.href = canvas.toDataURL();
+      const timestamp = new Date().toISOString().slice(0, 10);
+      link.download = `niyam-${selectedNiyam.id}-${timestamp}.${format}`;
+      
+      if (format === 'jpg') {
+        // Create white background for JPG
+        const jpgCanvas = document.createElement('canvas');
+        jpgCanvas.width = canvas.width;
+        jpgCanvas.height = canvas.height;
+        const ctx = jpgCanvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, jpgCanvas.width, jpgCanvas.height);
+        ctx.drawImage(canvas, 0, 0);
+        link.href = jpgCanvas.toDataURL('image/jpeg', 0.9);
+      } else {
+        link.href = canvas.toDataURL(`image/${format}`);
+      }
+      
       link.click();
     } catch (error) {
       console.error('Error generating image:', error);
       alert('Error generating image. Please try again.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
   const shareAsText = () => {
+    const currentNiyam = isCustomMode ? { text: customText, category: 'Custom' } : selectedNiyam;
+    const shareText = `"${currentNiyam.text}" - ${currentNiyam.category}\n\nShare your daily mindful practice at ${window.location.origin}`;
+    
     if (navigator.share) {
       navigator.share({
         title: 'Daily Niyam',
-        text: `"${selectedNiyam.text}" - ${selectedNiyam.category}`,
+        text: shareText,
         url: window.location.origin
-      });
+      }).catch(console.error);
     } else {
-      navigator.clipboard.writeText(`"${selectedNiyam.text}" - ${selectedNiyam.category}\n\nShare your daily mindful practice at ${window.location.origin}`);
+      copyToClipboard(shareText);
+    }
+  };
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
       alert('Niyam copied to clipboard!');
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Niyam copied to clipboard!');
+    }
+  };
+
+  const saveToFavorites = () => {
+    const favorites = JSON.parse(localStorage.getItem('favoriteNiyams') || '[]');
+    const niyamToSave = isCustomMode ? { 
+      id: Date.now(), 
+      text: customText, 
+      category: 'Custom',
+      isCustom: true 
+    } : selectedNiyam;
+    
+    if (!favorites.find(fav => fav.id === niyamToSave.id)) {
+      favorites.push(niyamToSave);
+      localStorage.setItem('favoriteNiyams', JSON.stringify(favorites));
+      alert('Niyam saved to favorites!');
+    } else {
+      alert('This niyam is already in your favorites!');
     }
   };
 
@@ -127,31 +297,184 @@ export default function SharePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Controls */}
           <div className="space-y-6">
-            {/* Niyam Selection */}
+            {/* Mode Toggle */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Niyam</h3>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {niyams.map((niyam) => (
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setIsCustomMode(false)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    !isCustomMode 
+                      ? 'bg-orange-600 text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Select Niyam
+                </button>
+                <button
+                  onClick={() => setIsCustomMode(true)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    isCustomMode 
+                      ? 'bg-orange-600 text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Custom Text
+                </button>
+              </div>
+
+              {isCustomMode ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Enter your custom niyam:
+                  </label>
+                  <textarea
+                    value={customText}
+                    onChange={(e) => setCustomText(e.target.value)}
+                    placeholder="Write your own daily principle..."
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                    rows={3}
+                    maxLength={150}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {customText.length}/150 characters
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex gap-2 mb-3">
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    >
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={getRandomNiyam}
+                      className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+                    >
+                      🎲 Random
+                    </button>
+                  </div>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {getFilteredNiyams().map((niyam) => (
+                      <button
+                        key={niyam.id}
+                        onClick={() => setSelectedNiyamWithHistory(niyam)}
+                        className={`w-full text-left p-3 rounded-lg border transition-all ${
+                          selectedNiyam.id === niyam.id
+                            ? 'border-orange-500 bg-orange-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <p className="text-sm font-medium text-gray-900">{niyam.text}</p>
+                        <p className="text-xs text-gray-500 mt-1">{niyam.category}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* History Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">View History</h3>
+                <div className="flex gap-2">
                   <button
-                    key={niyam.id}
-                    onClick={() => setSelectedNiyam(niyam)}
-                    className={`w-full text-left p-3 rounded-lg border transition-all ${
-                      selectedNiyam.id === niyam.id
-                        ? 'border-orange-500 bg-orange-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                  >
+                    {showHistory ? 'Hide' : 'Show'} ({viewHistory.length})
+                  </button>
+                  {viewHistory.length > 0 && (
+                    <button
+                      onClick={clearHistory}
+                      className="px-3 py-1 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {showHistory && (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {viewHistory.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      No niyams viewed yet. Select some niyams to build your history!
+                    </p>
+                  ) : (
+                    viewHistory.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{item.text}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`inline-block px-2 py-1 rounded text-xs ${getCategoryColor(item.category)}`}>
+                              {item.category}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(item.viewedAt).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => loadFromHistory(item)}
+                          className="ml-3 px-2 py-1 text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 rounded transition-colors"
+                        >
+                          Use
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Style Options */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Card Style</h3>
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {cardStyles.map((style) => (
+                  <button
+                    key={style.value}
+                    onClick={() => setCardStyle(style.value)}
+                    className={`p-2 rounded-lg border-2 transition-all text-sm ${
+                      cardStyle === style.value ? 'border-gray-900 bg-gray-50' : 'border-gray-200'
                     }`}
                   >
-                    <p className="text-sm font-medium text-gray-900">{niyam.text}</p>
-                    <p className="text-xs text-gray-500 mt-1">{niyam.category}</p>
+                    {style.name}
                   </button>
                 ))}
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Font Size</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {fontSizes.map((size) => (
+                    <button
+                      key={size.value}
+                      onClick={() => setFontSize(size.value)}
+                      className={`p-2 rounded-lg border-2 transition-all text-sm ${
+                        fontSize === size.value ? 'border-gray-900 bg-gray-50' : 'border-gray-200'
+                      }`}
+                    >
+                      {size.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Background Color */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Background Style</h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {backgroundOptions.map((bg) => (
                   <button
                     key={bg.value}
@@ -160,7 +483,7 @@ export default function SharePage() {
                       bgColor === bg.value ? 'border-gray-900' : 'border-gray-200'
                     }`}
                   >
-                    <div className={`w-full h-8 rounded bg-gradient-to-r ${bg.gradient} mb-2`}></div>
+                    <div className={`w-full h-6 rounded bg-linear-to-r ${bg.gradient} mb-2`}></div>
                     <p className="text-xs text-gray-700">{bg.name}</p>
                   </button>
                 ))}
@@ -171,17 +494,26 @@ export default function SharePage() {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Share Options</h3>
               <div className="space-y-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={downloadAsImage}
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Download as Image
-                </motion.button>
+                <div className="grid grid-cols-2 gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => downloadAsImage('png')}
+                    disabled={isGenerating}
+                    className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 text-sm"
+                  >
+                    📁 PNG
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => downloadAsImage('jpg')}
+                    disabled={isGenerating}
+                    className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 text-sm"
+                  >
+                    📸 JPG
+                  </motion.button>
+                </div>
                 
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -194,6 +526,27 @@ export default function SharePage() {
                   </svg>
                   Share as Text
                 </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={saveToFavorites}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  Save to Favorites
+                </motion.button>
+
+                {isGenerating && (
+                  <div className="text-center py-2">
+                    <div className="inline-flex items-center gap-2 text-orange-600">
+                      <div className="animate-spin w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full"></div>
+                      Generating image...
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -206,15 +559,21 @@ export default function SharePage() {
               {/* Shareable Card */}
               <div 
                 ref={cardRef}
-                className={`w-full aspect-[3/2] bg-gradient-to-br ${getBgGradient()} rounded-xl p-8 flex flex-col justify-center items-center text-white shadow-xl`}
+                className={`w-full aspect-3/2 ${getCardBackground()} rounded-xl p-8 flex flex-col justify-center items-center text-white shadow-xl relative overflow-hidden`}
               >
-                <div className="text-center space-y-6">
-                  <div className={`inline-block px-4 py-2 rounded-full text-sm font-medium border ${getCategoryColor(selectedNiyam.category)} bg-white/90`}>
-                    {selectedNiyam.category}
+                {cardStyle === 'pattern' && (
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.3)_1px,transparent_0)] bg-size-[20px_20px]"></div>
+                  </div>
+                )}
+                
+                <div className="text-center space-y-6 relative z-10">
+                  <div className={`inline-block px-4 py-2 rounded-full text-sm font-medium border ${getCategoryColor(isCustomMode ? 'Custom' : selectedNiyam.category)} bg-white/90`}>
+                    {isCustomMode ? 'Custom' : selectedNiyam.category}
                   </div>
                   
-                  <blockquote className="text-xl md:text-2xl font-medium leading-relaxed text-center max-w-md">
-                    "{selectedNiyam.text}"
+                  <blockquote className={`${getFontSizeClass()} font-medium leading-relaxed text-center max-w-md`}>
+                    "{isCustomMode ? customText : selectedNiyam.text}"
                   </blockquote>
                   
                   <div className="pt-4">
@@ -227,6 +586,38 @@ export default function SharePage() {
               <p className="text-sm text-gray-500 mt-4 text-center">
                 This is how your niyam will appear when shared as an image
               </p>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="bg-orange-50 rounded-lg p-3">
+                  <div className="text-2xl font-bold text-orange-600">{niyams.length}</div>
+                  <div className="text-xs text-orange-700">Total Niyams</div>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3">
+                  <div className="text-2xl font-bold text-blue-600">{getFilteredNiyams().length}</div>
+                  <div className="text-xs text-blue-700">In Category</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-3">
+                  <div className="text-2xl font-bold text-purple-600">{viewHistory.length}</div>
+                  <div className="text-xs text-purple-700">Viewed</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tips */}
+            <div className="bg-linear-to-r from-orange-50 to-yellow-50 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">💡 Tips</h3>
+              <ul className="text-sm text-gray-700 space-y-2">
+                <li>• Use custom text to create your own principles</li>
+                <li>• Try different backgrounds for various moods</li>
+                <li>• Save your favorites for quick access</li>
+                <li>• Download as PNG for transparency, JPG for smaller files</li>
+                <li>• Check your history to revisit previously viewed niyams</li>
+                <li>• History automatically saves the last 50 niyams you've viewed</li>
+              </ul>
             </div>
           </div>
         </div>

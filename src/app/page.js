@@ -214,12 +214,13 @@ export default function Home() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-orange-600 text-white px-4 py-2 rounded-md z-50">
         Skip to main content
       </a>
-      <header className="text-center py-12 px-4 bg-linear-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900" role="banner">
+      
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-center py-12 px-4 bg-linear-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900"
+        className="text-center py-12 px-4 bg-gradient-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900"
+        role="banner"
       >
         <div className="flex justify-between items-center max-w-2xl mx-auto mb-4">
           <Link href="/share" className="p-2 rounded-lg bg-orange-100 dark:bg-gray-700 hover:bg-orange-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
@@ -255,24 +256,6 @@ export default function Home() {
       </motion.header>
 
       <main className="max-w-2xl mx-auto px-4 pb-12" id="main-content" role="main">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300" role="article" aria-labelledby="daily-niyam-heading">
-          <h2 id="daily-niyam-heading" className="sr-only">Today's Daily Niyam</h2>
-          {currentNiyam ? (
-            <div className="text-center">
-              <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium mb-6 border ${getCategoryColor(currentNiyam.category)}`} role="tag" aria-label={`Category: ${currentNiyam.category}`}>
-                {currentNiyam.category}
-              </span>
-              
-              <h3 className="text-2xl md:text-3xl font-medium text-gray-800 dark:text-gray-100 mb-8 leading-relaxed" aria-live="polite" role="region" aria-label="Current niyam text">
-                {currentNiyam.text}
-              </h3>
-              
-              <button
-                onClick={setRandomNiyam}
-                className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-                aria-label="Get a new random niyam"
-                type="button"
-      <main className="max-w-2xl mx-auto px-4 pb-12">
         {/* Statistics Dashboard */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
