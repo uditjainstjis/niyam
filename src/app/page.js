@@ -40,6 +40,12 @@ export default function Home() {
   const [currentNiyam, setCurrentNiyam] = useState(null);
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [completedNiyams, setCompletedNiyams] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    thisWeek: 0,
+    streak: 0
+  });
 
   useEffect(() => {
     setRandomNiyam();
@@ -54,7 +60,60 @@ export default function Home() {
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
     }
+    
+    // Load completed niyams from localStorage
+    const saved = localStorage.getItem('completedNiyams');
+    if (saved) {
+      const completed = JSON.parse(saved);
+      setCompletedNiyams(completed);
+      calculateStats(completed);
+    }
   }, []);
+
+  const calculateStats = (completed) => {
+    const total = completed.length;
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thisWeek = completed.filter(item => new Date(item.date) >= weekAgo).length;
+    
+    // Calculate streak
+    let streak = 0;
+    const sortedDates = completed
+      .map(item => new Date(item.date).toDateString())
+      .filter((date, index, self) => self.indexOf(date) === index)
+      .sort((a, b) => new Date(b) - new Date(a));
+    
+    for (let i = 0; i < sortedDates.length; i++) {
+      const checkDate = new Date(now);
+      checkDate.setDate(checkDate.getDate() - i);
+      if (sortedDates[i] === checkDate.toDateString()) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    setStats({ total, thisWeek, streak });
+  };
+
+  const markAsComplete = () => {
+    if (!currentNiyam) return;
+    
+    const newCompletion = {
+      id: currentNiyam.id,
+      text: currentNiyam.text,
+      category: currentNiyam.category,
+      date: new Date().toISOString()
+    };
+    
+    const updated = [...completedNiyams, newCompletion];
+    setCompletedNiyams(updated);
+    localStorage.setItem('completedNiyams', JSON.stringify(updated));
+    calculateStats(updated);
+    
+    // Get a new niyam after marking complete
+    setRandomNiyam();
+  };
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -148,10 +207,31 @@ export default function Home() {
       </motion.header>
 
       <main className="max-w-2xl mx-auto px-4 pb-12">
+        {/* Statistics Dashboard */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="grid grid-cols-3 gap-4 mb-8"
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 border border-orange-100 dark:border-gray-700 text-center">
+            <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">{stats.total}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Total Completed</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 border border-blue-100 dark:border-gray-700 text-center">
+            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.thisWeek}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">This Week</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 border border-green-100 dark:border-gray-700 text-center">
+            <div className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.streak}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Day Streak 🔥</div>
+          </div>
+        </motion.div>
+
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
         >
           {currentNiyam ? (
@@ -182,14 +262,27 @@ export default function Home() {
                   {currentNiyam.text}
                 </motion.h2>
                 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={setRandomNiyam}
-                  className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
-                >
-                  Get Another Niyam
-                </motion.button>
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={markAsComplete}
+                    className="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Mark Complete
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={setRandomNiyam}
+                    className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                  >
+                    Get Another Niyam
+                  </motion.button>
+                </div>
               </motion.div>
             </AnimatePresence>
           ) : (
@@ -199,10 +292,43 @@ export default function Home() {
           )}
         </motion.div>
 
+        {/* Recent Completions */}
+        {completedNiyams.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
+          >
+            <h3 className="font-medium text-gray-800 dark:text-gray-100 text-lg mb-4">Recent Completions</h3>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {completedNiyams.slice(-5).reverse().map((item, index) => (
+                <motion.div 
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                >
+                  <svg className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-800 dark:text-gray-200">{item.text}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {new Date(item.date).toLocaleDateString()} at {new Date(item.date).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
         >
           <div className="flex items-center justify-between">
