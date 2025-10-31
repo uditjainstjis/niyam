@@ -38,6 +38,7 @@ const niyams = [
 export default function Home() {
   const [currentNiyam, setCurrentNiyam] = useState(null);
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     setRandomNiyam();
@@ -45,7 +46,25 @@ export default function Home() {
       setIsNotificationEnabled(true);
       scheduleNotifications();
     }
+    
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    }
   }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   const setRandomNiyam = () => {
     const randomIndex = Math.floor(Math.random() * niyams.length);
@@ -82,58 +101,75 @@ export default function Home() {
   const getCategoryColor = (category) => {
     switch (category) {
       case 'Food / Eating':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:text-orange-200 dark:border-orange-700';
       case 'Habits / Lifestyle':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700';
       case 'Mind / Spirit':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-700';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600';
     }
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="text-center py-12 px-4 bg-gradient-to-b from-orange-50 to-white">
-        <h1 className="text-4xl md:text-5xl font-bold text-orange-800 mb-3">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+      <header className="text-center py-12 px-4 bg-linear-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900">
+        <div className="flex justify-end max-w-2xl mx-auto mb-4">
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-lg bg-orange-100 dark:bg-gray-700 hover:bg-orange-200 dark:hover:bg-gray-600 transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? (
+              <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+              </svg>
+            )}
+          </button>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-bold text-orange-800 dark:text-orange-400 mb-3">
           Niyam
         </h1>
-        <p className="text-lg text-orange-600 max-w-md mx-auto">
+        <p className="text-lg text-orange-600 dark:text-orange-300 max-w-md mx-auto">
           Daily principles for mindful living
         </p>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pb-12">
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-orange-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300">
           {currentNiyam ? (
             <div className="text-center">
               <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium mb-6 border ${getCategoryColor(currentNiyam.category)}`}>
                 {currentNiyam.category}
               </span>
               
-              <h2 className="text-2xl md:text-3xl font-medium text-gray-800 mb-8 leading-relaxed">
+              <h2 className="text-2xl md:text-3xl font-medium text-gray-800 dark:text-gray-100 mb-8 leading-relaxed">
                 {currentNiyam.text}
               </h2>
               
               <button
                 onClick={setRandomNiyam}
-                className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
               >
                 Get Another Niyam
               </button>
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 dark:border-orange-400 mx-auto"></div>
             </div>
           )}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-orange-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-orange-100 dark:border-gray-700 transition-colors duration-300">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-gray-800 text-lg">Daily Reminders</h3>
-              <p className="text-gray-600 text-sm mt-1">
+              <h3 className="font-medium text-gray-800 dark:text-gray-100 text-lg">Daily Reminders</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
                 Get a new niyam notification every day
               </p>
             </div>
@@ -142,8 +178,8 @@ export default function Home() {
               onClick={requestNotificationPermission}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 isNotificationEnabled 
-                  ? 'bg-orange-600' 
-                  : 'bg-gray-300'
+                  ? 'bg-orange-600 dark:bg-orange-500' 
+                  : 'bg-gray-300 dark:bg-gray-600'
               }`}
             >
               <span
@@ -155,7 +191,7 @@ export default function Home() {
           </div>
           
           <div className="mt-4 text-center">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {isNotificationEnabled 
                 ? 'Notifications enabled - you\'ll receive daily niyams'
                 : 'Click the toggle to enable daily notifications'
@@ -165,8 +201,8 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="text-center py-8 px-4 border-t border-orange-100">
-        <p className="text-orange-600 text-sm">
+      <footer className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700">
+        <p className="text-orange-600 dark:text-orange-400 text-sm">
           Made with ❤️ for mindful living
         </p>
       </footer>
