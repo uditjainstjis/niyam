@@ -33,7 +33,12 @@ const niyams = [
   { id: 27, text: "Spend 5 minutes in nature.", category: "Mind / Spirit" },
   { id: 28, text: "Avoid complaining today.", category: "Mind / Spirit" },
   { id: 29, text: "Eat one meal without phone/TV.", category: "Mind / Spirit" },
-  { id: 30, text: "Help one person today (small way).", category: "Mind / Spirit" }
+  { id: 30, text: "Help one person today (small way).", category: "Mind / Spirit" },
+  { id: 31, text: "No fried food today.", category: "Food / Eating" },
+  { id: 32, text: "Drink 8 glasses of water today.", category: "Habits / Lifestyle" },
+  { id: 33, text: "Practice gratitude for 2 minutes.", category: "Mind / Spirit" },
+  { id: 34, text: "Take the stairs instead of elevator.", category: "Habits / Lifestyle" },
+  { id: 35, text: "No sweet snacks today.", category: "Food / Eating" }
 ];
 
 export default function Home() {
@@ -42,8 +47,6 @@ export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [completedNiyams, setCompletedNiyams] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [completedNiyams, setCompletedNiyams] = useState([]);
   const [stats, setStats] = useState({
     total: 0,
     thisWeek: 0,
@@ -66,6 +69,14 @@ export default function Home() {
       document.documentElement.classList.add('dark');
     }
 
+    // Load completed niyams from localStorage
+    const saved = localStorage.getItem('completedNiyams');
+    if (saved) {
+      const completed = JSON.parse(saved);
+      setCompletedNiyams(completed);
+      calculateStats(completed);
+    }
+
     // Add keyboard navigation
     const handleKeyPress = (event) => {
       if (event.key === 'n' || event.key === 'N') {
@@ -84,15 +95,6 @@ export default function Home() {
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
     };
-  }, []);
-    
-    // Load completed niyams from localStorage
-    const saved = localStorage.getItem('completedNiyams');
-    if (saved) {
-      const completed = JSON.parse(saved);
-      setCompletedNiyams(completed);
-      calculateStats(completed);
-    }
   }, [selectedCategory]);
 
   const calculateStats = (completed) => {
@@ -151,17 +153,6 @@ export default function Home() {
     }
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
-
   const setRandomNiyam = () => {
     const filteredNiyams = selectedCategory === 'All' 
       ? niyams 
@@ -200,7 +191,8 @@ export default function Home() {
       }
     };
     sendNotification();
-    setInterval(sendNotification, 2000);
+    // Send notification every 24 hours instead of every 2 seconds
+    setInterval(sendNotification, 24 * 60 * 60 * 1000);
   };
 
   const getCategoryColor = (category) => {
