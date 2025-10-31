@@ -71,6 +71,7 @@ export default function Home() {
       setCompletedNiyams(completed);
       calculateStats(completed);
     }
+  }, []);
   }, [selectedCategory]);
 
   const calculateStats = (completed) => {
@@ -127,6 +128,62 @@ export default function Home() {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
+  const calculateStats = (completed) => {
+    const total = completed.length;
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thisWeek = completed.filter(item => new Date(item.date) >= weekAgo).length;
+    
+    // Calculate streak
+    let streak = 0;
+    const sortedDates = completed
+      .map(item => new Date(item.date).toDateString())
+      .filter((date, index, self) => self.indexOf(date) === index)
+      .sort((a, b) => new Date(b) - new Date(a));
+    
+    for (let i = 0; i < sortedDates.length; i++) {
+      const checkDate = new Date(now);
+      checkDate.setDate(checkDate.getDate() - i);
+      if (sortedDates[i] === checkDate.toDateString()) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    setStats({ total, thisWeek, streak });
+  };
+
+  const markAsComplete = () => {
+    if (!currentNiyam) return;
+    
+    const newCompletion = {
+      id: currentNiyam.id,
+      text: currentNiyam.text,
+      category: currentNiyam.category,
+      date: new Date().toISOString()
+    };
+    
+    const updated = [...completedNiyams, newCompletion];
+    setCompletedNiyams(updated);
+    localStorage.setItem('completedNiyams', JSON.stringify(updated));
+    calculateStats(updated);
+    
+    // Get a new niyam after marking complete
+    setRandomNiyam();
   };
 
   const toggleDarkMode = () => {
@@ -251,6 +308,22 @@ export default function Home() {
           </div>
         </motion.div>
 
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
+        >
+          {currentNiyam ? (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentNiyam.id}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.4 }}
+                className="text-center"
+              >
         {/* Category Filter */}
         <motion.div 
           initial={{ opacity: 0 }}
@@ -349,6 +422,7 @@ export default function Home() {
                     onClick={setRandomNiyam}
                     className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
                   >
+                    Get Another Niyam
                     {selectedCategory === 'All' ? 'Get Another Niyam' : `Get Another from ${selectedCategory}`}
                   </motion.button>
                 </div>
@@ -366,6 +440,7 @@ export default function Home() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
             transition={{ duration: 0.5, delay: 0.5 }}
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
           >
@@ -394,6 +469,10 @@ export default function Home() {
           </motion.div>
         )}
 
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
         {/* Category Stats */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -466,6 +545,7 @@ export default function Home() {
       <motion.footer 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
         transition={{ delay: 0.8 }}
         className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700"
       >
