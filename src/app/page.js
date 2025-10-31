@@ -63,6 +63,7 @@ export default function Home() {
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
     }
+  }, []);
     
     // Load completed niyams from localStorage
     const saved = localStorage.getItem('completedNiyams');
@@ -116,6 +117,17 @@ export default function Home() {
     
     // Get a new niyam after marking complete
     setRandomNiyam();
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
   };
 
   const toggleDarkMode = () => {
@@ -196,6 +208,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+      <header className="text-center py-12 px-4 bg-linear-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900">
+        <div className="flex justify-end max-w-2xl mx-auto mb-4">
+          <button
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -219,6 +234,7 @@ export default function Home() {
                 <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
               </svg>
             )}
+          </button>
           </motion.button>
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-orange-800 dark:text-orange-400 mb-3">
@@ -230,6 +246,20 @@ export default function Home() {
       </motion.header>
 
       <main className="max-w-2xl mx-auto px-4 pb-12">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300">
+          {currentNiyam ? (
+            <div className="text-center">
+              <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium mb-6 border ${getCategoryColor(currentNiyam.category)}`}>
+                {currentNiyam.category}
+              </span>
+              
+              <h2 className="text-2xl md:text-3xl font-medium text-gray-800 dark:text-gray-100 mb-8 leading-relaxed">
+                {currentNiyam.text}
+              </h2>
+              
+              <button
+                onClick={setRandomNiyam}
+                className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
         {/* Statistics Dashboard */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -361,6 +391,7 @@ export default function Home() {
           )}
         </motion.div>
 
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-orange-100 dark:border-gray-700 transition-colors duration-300">
         {/* Recent Completions */}
         {completedNiyams.length > 0 && (
           <motion.div 
@@ -463,6 +494,7 @@ export default function Home() {
         </motion.div>
       </main>
 
+      <footer className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700">
       <motion.footer 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
