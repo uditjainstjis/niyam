@@ -63,6 +63,26 @@ export default function Home() {
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
     }
+
+    // Add keyboard navigation
+    const handleKeyPress = (event) => {
+      if (event.key === 'n' || event.key === 'N') {
+        event.preventDefault();
+        setRandomNiyam();
+      }
+      if (event.key === 't' || event.key === 'T') {
+        event.preventDefault();
+        toggleDarkMode();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []);
     
     // Load completed niyams from localStorage
     const saved = localStorage.getItem('completedNiyams');
@@ -196,6 +216,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-orange-600 text-white px-4 py-2 rounded-md z-50">
+        Skip to main content
+      </a>
+      <header className="text-center py-12 px-4 bg-linear-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900" role="banner">
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -207,8 +231,9 @@ export default function Home() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleDarkMode}
-            className="p-2 rounded-lg bg-orange-100 dark:bg-gray-700 hover:bg-orange-200 dark:hover:bg-gray-600 transition-colors"
-            aria-label="Toggle dark mode"
+            className="p-2 rounded-lg bg-orange-100 dark:bg-gray-700 hover:bg-orange-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+            type="button"
           >
             {isDarkMode ? (
               <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -221,14 +246,32 @@ export default function Home() {
             )}
           </motion.button>
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-orange-800 dark:text-orange-400 mb-3">
+        <h1 className="text-4xl md:text-5xl font-bold text-orange-800 dark:text-orange-400 mb-3" id="app-title">
           Niyam
         </h1>
-        <p className="text-lg text-orange-600 dark:text-orange-300 max-w-md mx-auto">
+        <p className="text-lg text-orange-600 dark:text-orange-300 max-w-md mx-auto" role="doc-subtitle">
           Daily principles for mindful living
         </p>
       </motion.header>
 
+      <main className="max-w-2xl mx-auto px-4 pb-12" id="main-content" role="main">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300" role="article" aria-labelledby="daily-niyam-heading">
+          <h2 id="daily-niyam-heading" className="sr-only">Today's Daily Niyam</h2>
+          {currentNiyam ? (
+            <div className="text-center">
+              <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium mb-6 border ${getCategoryColor(currentNiyam.category)}`} role="tag" aria-label={`Category: ${currentNiyam.category}`}>
+                {currentNiyam.category}
+              </span>
+              
+              <h3 className="text-2xl md:text-3xl font-medium text-gray-800 dark:text-gray-100 mb-8 leading-relaxed" aria-live="polite" role="region" aria-label="Current niyam text">
+                {currentNiyam.text}
+              </h3>
+              
+              <button
+                onClick={setRandomNiyam}
+                className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                aria-label="Get a new random niyam"
+                type="button"
       <main className="max-w-2xl mx-auto px-4 pb-12">
         {/* Statistics Dashboard */}
         <motion.div 
@@ -293,6 +336,21 @@ export default function Home() {
               >
                 Clear filter
               </button>
+              
+              <div className="mt-6 text-center">
+                <details className="inline-block text-left">
+                  <summary className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded">
+                    Keyboard shortcuts
+                  </summary>
+                  <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm text-gray-600 dark:text-gray-300">
+                    <div className="space-y-1">
+                      <div><kbd className="px-2 py-1 bg-white dark:bg-gray-600 rounded text-xs font-mono">N</kbd> - New niyam</div>
+                      <div><kbd className="px-2 py-1 bg-white dark:bg-gray-600 rounded text-xs font-mono">T</kbd> - Toggle theme</div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </div>
             </motion.div>
           )}
         </motion.div>
@@ -355,8 +413,9 @@ export default function Home() {
               </motion.div>
             </AnimatePresence>
           ) : (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 dark:border-orange-400 mx-auto"></div>
+            <div className="text-center py-12" role="status" aria-label="Loading niyam">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 dark:border-orange-400 mx-auto" aria-hidden="true"></div>
+              <span className="sr-only">Loading your daily niyam...</span>
             </div>
           )}
         </motion.div>
@@ -421,6 +480,7 @@ export default function Home() {
           </div>
         </motion.div>
 
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-orange-100 dark:border-gray-700 transition-colors duration-300" role="region" aria-labelledby="notification-settings">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -429,7 +489,7 @@ export default function Home() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-gray-800 dark:text-gray-100 text-lg">Daily Reminders</h3>
+              <h3 id="notification-settings" className="font-medium text-gray-800 dark:text-gray-100 text-lg">Daily Reminders</h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
                 Get a new niyam notification every day
               </p>
@@ -438,12 +498,22 @@ export default function Home() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={requestNotificationPermission}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
                 isNotificationEnabled 
                   ? 'bg-orange-600 dark:bg-orange-500' 
                   : 'bg-gray-300 dark:bg-gray-600'
               }`}
+              role="switch"
+              aria-checked={isNotificationEnabled}
+              aria-labelledby="notification-settings"
+              aria-describedby="notification-description"
+              type="button"
             >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isNotificationEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+                aria-hidden="true"
               <motion.span
                 animate={{ x: isNotificationEnabled ? 24 : 4 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -453,7 +523,7 @@ export default function Home() {
           </div>
           
           <div className="mt-4 text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p id="notification-description" className="text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
               {isNotificationEnabled 
                 ? 'Notifications enabled - you\'ll receive daily niyams'
                 : 'Click the toggle to enable daily notifications'
@@ -463,6 +533,7 @@ export default function Home() {
         </motion.div>
       </main>
 
+      <footer className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700" role="contentinfo">
       <motion.footer 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -470,7 +541,7 @@ export default function Home() {
         className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700"
       >
         <p className="text-orange-600 dark:text-orange-400 text-sm">
-          Made with ❤️ for mindful living
+          Made with <span aria-label="love">❤️</span> for mindful living
         </p>
       </motion.footer>
     </div>
