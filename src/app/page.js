@@ -40,12 +40,15 @@ export default function Home() {
   const [currentNiyam, setCurrentNiyam] = useState(null);
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [completedNiyams, setCompletedNiyams] = useState([]);
   const [stats, setStats] = useState({
     total: 0,
     thisWeek: 0,
     streak: 0
   });
+
+  const categories = ['All', 'Food / Eating', 'Habits / Lifestyle', 'Mind / Spirit'];
 
   useEffect(() => {
     setRandomNiyam();
@@ -69,6 +72,74 @@ export default function Home() {
       calculateStats(completed);
     }
   }, []);
+  }, [selectedCategory]);
+
+  const calculateStats = (completed) => {
+    const total = completed.length;
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thisWeek = completed.filter(item => new Date(item.date) >= weekAgo).length;
+    
+    // Calculate streak
+    let streak = 0;
+    const sortedDates = completed
+      .map(item => new Date(item.date).toDateString())
+      .filter((date, index, self) => self.indexOf(date) === index)
+      .sort((a, b) => new Date(b) - new Date(a));
+    
+    for (let i = 0; i < sortedDates.length; i++) {
+      const checkDate = new Date(now);
+      checkDate.setDate(checkDate.getDate() - i);
+      if (sortedDates[i] === checkDate.toDateString()) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    setStats({ total, thisWeek, streak });
+  };
+
+  const markAsComplete = () => {
+    if (!currentNiyam) return;
+    
+    const newCompletion = {
+      id: currentNiyam.id,
+      text: currentNiyam.text,
+      category: currentNiyam.category,
+      date: new Date().toISOString()
+    };
+    
+    const updated = [...completedNiyams, newCompletion];
+    setCompletedNiyams(updated);
+    localStorage.setItem('completedNiyams', JSON.stringify(updated));
+    calculateStats(updated);
+    
+    // Get a new niyam after marking complete
+    setRandomNiyam();
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   const calculateStats = (completed) => {
     const total = completed.length;
@@ -127,8 +198,17 @@ export default function Home() {
   };
 
   const setRandomNiyam = () => {
-    const randomIndex = Math.floor(Math.random() * niyams.length);
-    setCurrentNiyam(niyams[randomIndex]);
+    const filteredNiyams = selectedCategory === 'All' 
+      ? niyams 
+      : niyams.filter(n => n.category === selectedCategory);
+    
+    if (filteredNiyams.length === 0) {
+      setCurrentNiyam(niyams[0]);
+      return;
+    }
+    
+    const randomIndex = Math.floor(Math.random() * filteredNiyams.length);
+    setCurrentNiyam(filteredNiyams[randomIndex]);
   };
 
   const requestNotificationPermission = async () => {
@@ -244,6 +324,68 @@ export default function Home() {
                 transition={{ duration: 0.4 }}
                 className="text-center"
               >
+        {/* Category Filter */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-8"
+        >
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">Filter by Category</h3>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {categories.map((category) => (
+              <motion.button
+                key={category}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedCategory === category
+                    ? 'bg-orange-600 text-white shadow-md scale-105'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                {category === 'All' ? '🌟 All' : category}
+                {category !== 'All' && (
+                  <span className="ml-1 text-xs opacity-75">
+                    ({niyams.filter(n => n.category === category).length})
+                  </span>
+                )}
+              </motion.button>
+            ))}
+          </div>
+          {selectedCategory !== 'All' && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mt-3 text-center"
+            >
+              <button
+                onClick={() => setSelectedCategory('All')}
+                className="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 underline"
+              >
+                Clear filter
+              </button>
+            </motion.div>
+          )}
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
+        >
+          {currentNiyam ? (
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={currentNiyam.id}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.4 }}
+                className="text-center"
+              >
                 <motion.span 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -281,6 +423,7 @@ export default function Home() {
                     className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
                   >
                     Get Another Niyam
+                    {selectedCategory === 'All' ? 'Get Another Niyam' : `Get Another from ${selectedCategory}`}
                   </motion.button>
                 </div>
               </motion.div>
@@ -298,6 +441,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
           >
             <h3 className="font-medium text-gray-800 dark:text-gray-100 text-lg mb-4">Recent Completions</h3>
@@ -329,6 +473,37 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
+        {/* Category Stats */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="grid grid-cols-3 gap-4 mb-8"
+        >
+          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800 text-center">
+            <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">
+              {niyams.filter(n => n.category === 'Food / Eating').length}
+            </div>
+            <div className="text-xs text-orange-600 dark:text-orange-300 mt-1">Food / Eating</div>
+          </div>
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800 text-center">
+            <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+              {niyams.filter(n => n.category === 'Habits / Lifestyle').length}
+            </div>
+            <div className="text-xs text-blue-600 dark:text-blue-300 mt-1">Habits / Lifestyle</div>
+          </div>
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800 text-center">
+            <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+              {niyams.filter(n => n.category === 'Mind / Spirit').length}
+            </div>
+            <div className="text-xs text-green-600 dark:text-green-300 mt-1">Mind / Spirit</div>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
         >
           <div className="flex items-center justify-between">
@@ -371,6 +546,7 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
+        transition={{ delay: 0.8 }}
         className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700"
       >
         <p className="text-orange-600 dark:text-orange-400 text-sm">
