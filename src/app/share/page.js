@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
@@ -51,6 +51,8 @@ export default function SharePage() {
   const [cardStyle, setCardStyle] = useState('gradient');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [viewHistory, setViewHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
   const cardRef = useRef(null);
 
   const backgroundOptions = [
@@ -79,6 +81,52 @@ export default function SharePage() {
   ];
 
   const categories = ['All', 'Food / Eating', 'Habits / Lifestyle', 'Mind / Spirit'];
+
+  // Load history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('niyamViewHistory');
+    if (savedHistory) {
+      setViewHistory(JSON.parse(savedHistory));
+    }
+    // Add initial niyam to history
+    addToHistory(niyams[0]);
+  }, []);
+
+  // Function to add niyam to history
+  const addToHistory = (niyam) => {
+    const timestamp = new Date().toISOString();
+    const historyItem = {
+      ...niyam,
+      viewedAt: timestamp,
+      id: `${niyam.id}-${timestamp}` // Unique ID for history items
+    };
+
+    setViewHistory(prev => {
+      // Remove if already exists to avoid duplicates
+      const filtered = prev.filter(item => item.id !== niyam.id);
+      // Add to beginning and limit to 50 items
+      const newHistory = [historyItem, ...filtered].slice(0, 50);
+      localStorage.setItem('niyamViewHistory', JSON.stringify(newHistory));
+      return newHistory;
+    });
+  };
+
+  // Function to clear history
+  const clearHistory = () => {
+    setViewHistory([]);
+    localStorage.removeItem('niyamViewHistory');
+    alert('History cleared!');
+  };
+
+  // Function to load niyam from history
+  const loadFromHistory = (historyItem) => {
+    setSelectedNiyam({
+      id: historyItem.id.split('-')[0], // Extract original ID
+      text: historyItem.text,
+      category: historyItem.category
+    });
+    setIsCustomMode(false);
+  };
 
   const getBgGradient = () => {
     const bg = backgroundOptions.find(bg => bg.value === bgColor);
@@ -116,7 +164,15 @@ export default function SharePage() {
   const getRandomNiyam = () => {
     const filtered = getFilteredNiyams();
     const randomIndex = Math.floor(Math.random() * filtered.length);
-    setSelectedNiyam(filtered[randomIndex]);
+    const randomNiyam = filtered[randomIndex];
+    setSelectedNiyam(randomNiyam);
+    addToHistory(randomNiyam);
+  };
+
+  // Function to set selected niyam and add to history
+  const setSelectedNiyamWithHistory = (niyam) => {
+    setSelectedNiyam(niyam);
+    addToHistory(niyam);
   };
 
   const getCategoryColor = (category) => {
@@ -306,7 +362,7 @@ export default function SharePage() {
                     {getFilteredNiyams().map((niyam) => (
                       <button
                         key={niyam.id}
-                        onClick={() => setSelectedNiyam(niyam)}
+                        onClick={() => setSelectedNiyamWithHistory(niyam)}
                         className={`w-full text-left p-3 rounded-lg border transition-all ${
                           selectedNiyam.id === niyam.id
                             ? 'border-orange-500 bg-orange-50'
@@ -318,6 +374,64 @@ export default function SharePage() {
                       </button>
                     ))}
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* History Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">View History</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                  >
+                    {showHistory ? 'Hide' : 'Show'} ({viewHistory.length})
+                  </button>
+                  {viewHistory.length > 0 && (
+                    <button
+                      onClick={clearHistory}
+                      className="px-3 py-1 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {showHistory && (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {viewHistory.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      No niyams viewed yet. Select some niyams to build your history!
+                    </p>
+                  ) : (
+                    viewHistory.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{item.text}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`inline-block px-2 py-1 rounded text-xs ${getCategoryColor(item.category)}`}>
+                              {item.category}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(item.viewedAt).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => loadFromHistory(item)}
+                          className="ml-3 px-2 py-1 text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 rounded transition-colors"
+                        >
+                          Use
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </div>
@@ -477,7 +591,7 @@ export default function SharePage() {
             {/* Quick Stats */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
-              <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="bg-orange-50 rounded-lg p-3">
                   <div className="text-2xl font-bold text-orange-600">{niyams.length}</div>
                   <div className="text-xs text-orange-700">Total Niyams</div>
@@ -485,6 +599,10 @@ export default function SharePage() {
                 <div className="bg-blue-50 rounded-lg p-3">
                   <div className="text-2xl font-bold text-blue-600">{getFilteredNiyams().length}</div>
                   <div className="text-xs text-blue-700">In Category</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-3">
+                  <div className="text-2xl font-bold text-purple-600">{viewHistory.length}</div>
+                  <div className="text-xs text-purple-700">Viewed</div>
                 </div>
               </div>
             </div>
@@ -497,6 +615,8 @@ export default function SharePage() {
                 <li>• Try different backgrounds for various moods</li>
                 <li>• Save your favorites for quick access</li>
                 <li>• Download as PNG for transparency, JPG for smaller files</li>
+                <li>• Check your history to revisit previously viewed niyams</li>
+                <li>• History automatically saves the last 50 niyams you've viewed</li>
               </ul>
             </div>
           </div>
