@@ -63,6 +63,7 @@ export default function Home() {
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
     }
+  }, []);
     
     // Load completed niyams from localStorage
     const saved = localStorage.getItem('completedNiyams');
@@ -116,6 +117,17 @@ export default function Home() {
     
     // Get a new niyam after marking complete
     setRandomNiyam();
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
   };
 
   const toggleDarkMode = () => {
@@ -230,6 +242,22 @@ export default function Home() {
       </motion.header>
 
       <main className="max-w-2xl mx-auto px-4 pb-12">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
+        >
+          {currentNiyam ? (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentNiyam.id}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.4 }}
+                className="text-center"
+              >
         {/* Statistics Dashboard */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -331,6 +359,14 @@ export default function Home() {
                   {currentNiyam.text}
                 </motion.h2>
                 
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={setRandomNiyam}
+                  className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                >
+                  Get Another Niyam
+                </motion.button>
                 <div className="flex gap-3 justify-center flex-wrap">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -361,6 +397,10 @@ export default function Home() {
           )}
         </motion.div>
 
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
         {/* Recent Completions */}
         {completedNiyams.length > 0 && (
           <motion.div 
@@ -466,6 +506,7 @@ export default function Home() {
       <motion.footer 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
         transition={{ delay: 0.8 }}
         className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700"
       >
