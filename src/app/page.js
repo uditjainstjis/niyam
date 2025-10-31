@@ -42,6 +42,8 @@ export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [completedNiyams, setCompletedNiyams] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [completedNiyams, setCompletedNiyams] = useState([]);
   const [stats, setStats] = useState({
     total: 0,
     thisWeek: 0,
@@ -116,6 +118,17 @@ export default function Home() {
     
     // Get a new niyam after marking complete
     setRandomNiyam();
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
   };
 
   const toggleDarkMode = () => {
@@ -295,6 +308,7 @@ export default function Home() {
           {currentNiyam ? (
             <AnimatePresence mode="wait">
               <motion.div
+              <motion.div 
                 key={currentNiyam.id}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -419,6 +433,64 @@ export default function Home() {
               </p>
               <p className="text-sm font-medium text-green-600 dark:text-green-400 mt-2">🧘 Mind/Spirit</p>
             </motion.div>
+
+        {/* Recent Completions */}
+        {completedNiyams.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-8 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
+          >
+            <h3 className="font-medium text-gray-800 dark:text-gray-100 text-lg mb-4">Recent Completions</h3>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {completedNiyams.slice(-5).reverse().map((item, index) => (
+                <motion.div 
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                >
+                  <svg className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-800 dark:text-gray-200">{item.text}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {new Date(item.date).toLocaleDateString()} at {new Date(item.date).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Category Stats */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="grid grid-cols-3 gap-4 mb-8"
+        >
+          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800 text-center">
+            <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">
+              {niyams.filter(n => n.category === 'Food / Eating').length}
+            </div>
+            <div className="text-xs text-orange-600 dark:text-orange-300 mt-1">Food / Eating</div>
+          </div>
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800 text-center">
+            <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+              {niyams.filter(n => n.category === 'Habits / Lifestyle').length}
+            </div>
+            <div className="text-xs text-blue-600 dark:text-blue-300 mt-1">Habits / Lifestyle</div>
+          </div>
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800 text-center">
+            <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+              {niyams.filter(n => n.category === 'Mind / Spirit').length}
+            </div>
+            <div className="text-xs text-green-600 dark:text-green-300 mt-1">Mind / Spirit</div>
           </div>
         </motion.div>
 
@@ -426,6 +498,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-orange-100 dark:border-gray-700 transition-colors duration-300"
         >
           <div className="flex items-center justify-between">
@@ -468,6 +541,7 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
+        transition={{ delay: 0.8 }}
         className="text-center py-8 px-4 border-t border-orange-100 dark:border-gray-700"
       >
         <p className="text-orange-600 dark:text-orange-400 text-sm">
